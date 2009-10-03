@@ -27,7 +27,7 @@ gem 'jnunemaker-matchy', :lib => 'matchy', :env => 'test'
 gem 'rr', :env => 'test'
 gem 'faker', :env => 'test'
 
-rake 'gems:install', :sudo => true
+rake 'gems:install', :sudo => true if yes? "Install gems as sudo?"
 
 # ====================
 # Unnecessary files
