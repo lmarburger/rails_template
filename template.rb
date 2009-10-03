@@ -1,404 +1,190 @@
-# Enlightened template.rb
-# from Dan Pickett
+# Fork of Dan Pickett's Enlightened template
 # based on Suspenders by Thoughtbot
 # influenced by Mike Gunderloy's rails template - http://gist.github.com/145676
 
-require 'open-uri'
-require 'yaml'
-require 'base64'
+# ====================
+# Gems
+# ====================
 
-def self.prepend_to_file(path, string)
-  Tempfile.open File.basename(path) do |tempfile|
-    # prepend data to tempfile
-    tempfile << string
-
-    File.open(path, 'r+') do |file|
-      # append original data to tempfile
-      tempfile << file.read
-      # reset file positions
-      file.pos = tempfile.pos = 0
-      # copy all data back to original file
-      file << tempfile.read
-    end
-  end
-end
-
-def download(from, to = from.split("/").last)
-  #run "curl -s -L #{from} > #{to}"
-  file to, open(from).read
-rescue
-  puts "Can't get #{from} - Internet down?"
-  exit!
-end
-
-def from_repo(github_user, project_name, from, to = from.split("/").last)
-  download("http://github.com/#{github_user}/#{project_name}/raw/master/#{from}", to)
-end
-
-
-#====================
-# PLUGINS
-#====================
-
-plugin 'limerick_rake', :git => "git://github.com/thoughtbot/limerick_rake.git"
-plugin 'superdeploy', :git => "git://github.com/saizai/superdeploy.git"
-plugin 'tab_menu', :git => "git://github.com/dpickett/tab_menu.git"
-plugin 'spreadhead', :git => "git://github.com/jeffrafter/spreadhead.git"
-plugin 'silky_buttons', :git => "git://github.com/CodeOfficer/silky-buttons-for-rails.git"
-
-#rm routes file because it prepends rather than appends
-spreadhead_routes_file = "vendor/plugins/spreadhead/config/spreadhead_routes.rb"
-FileUtils.rm_rf("vendor/plugins/spreadhead/config/spreadhead_routes.rb")
-FileUtils.touch("vendor/plugins/spreadhead/config/spreadhead_routes.rb")
-
-#====================
-# GEMS
-#====================
-
-gem 'RedCloth', :lib => 'redcloth', :version => '~> 4.2.2'
 gem 'thoughtbot-hoptoad_notifier', :lib => "hoptoad_notifier"
-gem 'mislav-will_paginate', :lib => "will_paginate"
-gem 'thoughtbot-paperclip', :lib => "paperclip"
-gem "alexdunae-validates_email_format_of", :lib => "validates_email_format_of"
-gem 'rsl-stringex', :lib => "stringex"
-gem 'newrelic_rpm'
-gem 'binarylogic-authlogic', :lib => "authlogic"
-gem 'binarylogic-searchlogic', :lib => "searchlogic"
-gem 'josevalim-inherited_resources', :lib => 'inherited_resources'
-gem 'justinfrench-formtastic', :lib => 'formtastic'
+gem 'thoughtbot-clearance', :lib => 'clearance', :source => 'http://gems.github.com'
+gem 'josevalim-inherited_resources', :lib => 'inherited_resources', :source => 'http://gems.github.com'
+gem 'justinfrench-formtastic', :lib => 'formtastic', :source => 'http://gems.github.com'
+gem 'thoughtbot-paperclip', :lib => 'paperclip'
+gem 'compass'
 
-#==================
-# Development Gems
-#==================
-gem "cwninja-inaction_mailer",
-  :lib => 'inaction_mailer/force_load',
-  :source => 'http://gems.github.com',
-  :env => 'development'
-  
-#==================
-# Test Gems
-#==================
-gem 'rspec', :lib => false, :env => 'test'
-gem 'rspec-rails', :lib => false, :env => 'test'
-gem 'jferris-mocha', :lib => 'mocha', :env => "test"
-gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :env => "test"
-gem 'thoughtbot-shoulda', :lib => 'shoulda', :env => "test"
-gem "cucumber", :env => "test"
-gem 'jscruggs-metric_fu', 
-  :lib => 'metric_fu', 
-  :source => 'http://gems.github.com',
-  :env => 'test'
-gem "webrat", 
-  :lib => "webrat",
-  :env => 'test'
+# Generate cucumber before adding test gems
+generate :cucumber
 
-rake("gems:install", :sudo => true)
-# rake("gems:unpack")
+# Cucumber gems
+gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :env => 'cucumber'
+gem 'faker', :env => 'cucumber'
 
-prepend_to_file('config/environment.rb', "PROJECT_NAME = 'CHANGE'\r\n")
+# Test gems
+gem 'thoughtbot-shoulda', :lib => 'shoulda', :env => 'test'
+gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :env => 'test'
+gem 'jnunemaker-matchy', :lib => 'matchy', :env => 'test'
+gem 'rr', :env => 'test'
+gem 'faker', :env => 'test'
 
-generate(:rspec)
-FileUtils.rm_rf("test")
-#====================
-# APP
-#====================
+rake 'gems:install', :sudo => true
 
-file 'app/controllers/application_controller.rb', 
-%q{class ApplicationController < ActionController::Base
+# ====================
+# Unnecessary files
+# ====================
 
+[ 'README',
+  'doc/README_FOR_APP',
+  'public/index.html',
+  'public/favicon.ico',
+  'public/images/rails.png',
+
+  # Not using Prototype.js
+  'public/javascripts/controls.js',
+  'public/javascripts/dragdrop.js',
+  'public/javascripts/effects.js',
+  'public/javascripts/prototype.js',
+
+  'test/performance/browsing_test.rb'
+
+].each do |path|
+  FileUtils.rm path
+end
+
+# Fixtures are evil
+FileUtils.rm_rf("test/fixtures")
+
+
+# ====================
+# Controllers
+# ====================
+
+file 'app/controllers/application_controller.rb', <<-CODE
+class ApplicationController < ActionController::Base
   helper :all
-
   protect_from_forgery
-
   include HoptoadNotifier::Catcher
 end
-}
+CODE
 
-file 'app/helpers/application_helper.rb', 
+file 'app/controllers/home_controller.rb', <<-CODE
+class HomeController < ApplicationController
+  def index
+  end
+end
+CODE
+
+# Clear all the cruft from routes.rb
+file 'config/routes.rb', <<-CODE
+ActionController::Routing::Routes.draw do |map|
+end
+CODE
+
+route "map.root :controller => 'home'"
+
+# Create a blank home view
+file 'app/views/home/index.erb', ''
+
+
+# ====================
+# Layouts
+# ====================
+
+file 'app/helpers/application_helper.rb',
 %q{module ApplicationHelper
   def body_class
-    "#{controller.controller_name} #{controller.controller_name}-#{controller.action_name}"
+    "#{ controller.controller_name } #{ controller.controller_name }-#{ controller.action_name }"
   end
 end
 }
 
-file 'app/views/layouts/_flashes.html.erb', 
-%q{<div id="flash">
+file 'app/views/layouts/_flashes.html.erb', <<-CODE
+<div id="flash">
   <% flash.each do |key, value| -%>
     <div id="flash_<%= key %>"><%=h value %></div>
   <% end -%>
 </div>
-}
+CODE
 
-run 'rm public/javascripts/prototype.js'
-run 'rm public/javascripts/effects.js'
-run 'rm public/javascripts/dragdrop.js'
-run 'rm public/javascripts/controls.js'
-
-file 'public/stylesheets/ie7.css', ""
-file 'public/stylesheets/ie6.css', ""
-
-file 'app/views/layouts/application.html.erb', 
-%q{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+file 'app/views/layouts/application.html.erb', <<-CODE
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <title><%= yield(:title) %> || <%= PROJECT_NAME.humanize %></title>
-    <meta name="description" content="<%= yield(:description) || PROJECT_NAME.humanize %>" />
-    <meta name="keywords" content="<%= yield(:keywords) || PROJECT_NAME.humanize %>" />
+    <title></title>
     
-    <%= stylesheet_link_tag "reset", "under_construction", "960", "silky_buttons.css" %>
-    
-    <!--[if lte IE 7]><%= stylesheet_link_tag "ie7" %><![endif]-->
-    <!--[if lte IE 6]><%= stylesheet_link_tag "ie6" %><![endif]-->
-    
-    <%= yield :extra_header %>
+    <%= stylesheet_link_tag 'main' %>
   </head>
   <body class="<%= body_class %>">
     <%= render :partial => 'layouts/flashes' -%>
     <%= yield %>
-
-      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"
-        type="text/javascript"></script>
-      <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js"
-        type="text/javascript"></script>
-        
-    <%= javascript_include_tag 'xhr_fix', 
-      'jquery.under_construction.js',
-      'application' %>
-    
-    <%= yield :extra_footer %>
   </body>
 </html>
-}
+CODE
+
 
 #====================
-# INITIALIZERS
+# Initializers
 #====================
 
-initializer 'action_mailer_configs.rb', 
-%q{ActionMailer::Base.smtp_settings = {
-    :address => "",
-    :port    => 25,
-    :domain  => ""
-}
-}
-
-initializer 'errors.rb', 
-%q{# Example:
-#   begin
-#     some http call
-#   rescue *HTTP_ERRORS => error
-#     notify_hoptoad error
-#   end
-
-HTTP_ERRORS = [Timeout::Error,
-               Errno::EINVAL,
-               Errno::ECONNRESET,
-               EOFError,
-               Net::HTTPBadResponse,
-               Net::HTTPHeaderSyntaxError,
-               Net::ProtocolError]
-}
-
-
-initializer 'hoptoad.rb', 
-%q{HoptoadNotifier.configure do |config|
+initializer 'hoptoad.rb', <<-CODE
+HoptoadNotifier.configure do |config|
   config.api_key = 'HOPTOAD-KEY'
 end
-}
+CODE
 
-initializer 'mocks.rb', 
-%q{# Rails 2 doesn't like mocks
-
-# This callback will run before every request to a mock in development mode, 
-# or before the first server request in production. 
-
-Rails.configuration.to_prepare do
-  Dir[File.join(RAILS_ROOT, 'spec', 'mocks', RAILS_ENV, '*.rb')].each do |f|
-    load f
-  end
-end
-}
-
-initializer 'requires.rb', 
-%q{require 'redcloth'
-
-Dir[File.join(RAILS_ROOT, 'lib', 'extensions', '*.rb')].each do |f|
-  require f
-end
-
-Dir[File.join(RAILS_ROOT, 'lib', '*.rb')].each do |f|
-  require f
-end
-}
-
-initializer 'time_formats.rb', 
-%q{# Example time formats
+initializer 'time_formats.rb', <<-CODE
+# Example time formats
 { :short_date => "%x", :long_date => "%a, %b %d, %Y" }.each do |k, v|
   ActiveSupport::CoreExtensions::Time::Conversions::DATE_FORMATS.update(k => v)
 end
-}
+CODE
 
-initializer 'validation_fix.rb',
-%q{
-  ActionView::Base.field_error_proc = Proc.new { |html_tag, instance|
-  "<span class=\"fieldWithErrors\">#{html_tag}</span>" } 
-}
 
 # ====================
-# CONFIG
+# Git
 # ====================
 
-capify!
-
-file 'Capfile', 
-%q{load 'deploy' if respond_to?(:namespace) # cap2 differentiator
-Dir['vendor/plugins/*/recipes/*.rb'].each { |plugin| load(plugin) }
-load 'config/deploy'
-}
-
-file 'config/database.yml', 
-%q{<% PASSWORD_FILE = File.join(RAILS_ROOT, '..', '..', 'shared', 'config', 'dbpassword') %>
-
-development:
-  adapter: mysql
-  database: <%= PROJECT_NAME %>_development
-  username: root
-  password: 
-  host: localhost
-  encoding: utf8
-  
-test:
-  adapter: mysql
-  database: <%= PROJECT_NAME %>_test
-  username: root
-  password: 
-  host: localhost
-  encoding: utf8
-}
-
-FileUtils.cp('config/database.yml', 'config/database.example.yml')
-
-file 'config/initializers/debugging.rb',
-%q{if %w(development test).include?(RAILS_ENV)
-  begin
-    SCRIPT_LINES__
-  rescue NameError
-    SCRIPT_LINES__ = {}
-  end
-  begin
-    require 'ruby-debug'
-  rescue LoadError
-    warn "Debugging will be unavailable: #{$!}"
-  end
-end
-}
-
-file 'config/initializers/spreadhead.rb',
-%q{
-  module Spreadhead
-    module PagesAuth
-      def self.filter(controller)
-        controller.send(:head, 403)
-      end
-    end  
-  end
-}
-
-file 'config/routes.rb',
-%q{
-  ActionController::Routing::Routes.draw do |map|
-
-    map.resources :pages, :controller => 'spreadhead/pages'
-    map.connect '*url', :controller => 'spreadhead/pages', :action => 'show'
-
-    map.connect ':controller/:action/:id'
-    map.connect ':controller/:action/:id.:format'
-  end
-}, :collision => :force
-
-inside('db') do
-  run "mkdir bootstrap"
-end
-
-# ====================
-# TEST
-# ====================
-
-inside('spec') do
-  FileUtils.touch("factories.rb")
-end
-
-
-file 'public/javascripts/xhr_fix.js',
-%q{jQuery.ajaxSetup({ 
-  'beforeSend': function(xhr) {xhr.setRequestHeader("Accept",
-    "text/javascript")} 
-});
-}
-
-# ====================
-# Cucumber
-# ====================
-generate(:cucumber)
-
-# ====================
-# CSS
-# ====================
-
-#Eric Meyer's Reset
-download("http://meyerweb.com/eric/tools/css/reset/reset.css", 
-  "public/stylesheets/reset.css")
-  
-#960.gs
-download("http://bitbucket.org/nathansmith/960-grid-system/raw/tip/code/css/960.css", 
-  "public/stylesheets/960.css")
-
-run "mkdir public/images/grid"
-download("http://bitbucket.org/nathansmith/960-grid-system/raw/tip/code/img/12_col.gif",
-  "public/images/grid/12_col.gif")
-
-download("http://bitbucket.org/nathansmith/960-grid-system/raw/tip/code/img/16_col.gif",
-  "public/images/grid/16_col.gif")
-
-from_repo("dpickett", "under_construction",  
-  "stylesheets/under_construction.css",
-  "public/stylesheets/under_construction.css")
-
-from_repo("dpickett", "under_construction", 
-  "javascripts/jquery.under_construction.js",   
-  "public/javascripts/jquery.under_construction.js")
-  
-generate(:formtastic_stylesheets)
-
-generate(:silky_buttons)
-
-# ====================
-# FINALIZE
-# ====================
-
-run "rm public/index.html"
-run "rm public/README"
-run "rm public/favicon.ico"
-
-# Set up gitignore and commit base state
 file '.gitignore', <<-END
-log/*.log
-tmp/*
-.DS\_Store
 .DS_Store
-db/test.sqlite3
-db/development.sqlite3
-/log/*.pid
-/coverage/*
+log/*
+*.sqlite3*
 public/system/*
-config/database.yml
+tmp/*
+index/*
+.sass-cache
+scratch_directory
+TAGS
 *.swp
 END
 
-run 'find . \( -type d -empty \) -and \( -not -regex ./\.git.* \) -exec touch {}/.gitignore \;'
+# Create an empty schema
+rake 'db:migrate'
+
 git :init
-git :add => "."
-git :commit => "-a -m 'Initial project commit'"
+git :add => '.'
+git :commit => '-a -m "Initial commit"'
+
+
+# ====================
+# Clearance
+# ====================
+
+generate :clearance
+generate :clearance_features, '--force'
+
+# Add consts clearance needs to the environment
+File.open 'config/environments/cucumber.rb', 'a' do |file|
+  [ "\n\n",
+    "HOST = 'localhost'",
+    "DO_NOT_REPLY = 'donotreply@example.com'"
+  ].each do |line|
+    file.puts line
+  end
+end
+
+FileUtils.cp('config/database.yml', 'config/database.example.yml')
+rake 'db:migrate'
+
+git :add => '.'
+git :commit => '-a -m "Added Clearance"'
