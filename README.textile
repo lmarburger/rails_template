@@ -13,7 +13,6 @@ h2. Gems
 
 * Inherited Resources
 * Formtastic
-* Searchlogic
 * Paperclip
 * Compass
 * Hoptoad Notifier
