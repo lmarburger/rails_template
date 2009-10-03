@@ -167,6 +167,16 @@ git :init
 git :add => '.'
 git :commit => '-a -m "Initial commit"'
 
+
+# ====================
+# Haml
+# ====================
+
+run 'haml --rails .'
+
+git :add => '.'
+git :commit => '-a -m "Using Haml"'
+
 if yes? 'Need clearance, Clarence?'
 
   # ====================
