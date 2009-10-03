@@ -29,6 +29,7 @@ gem 'faker', :env => 'test'
 
 rake 'gems:install', :sudo => true if yes? "Install gems as sudo?"
 
+
 # ====================
 # Unnecessary files
 # ====================
@@ -159,6 +160,7 @@ TAGS
 END
 
 # Create an empty schema
+FileUtils.cp('config/database.yml', 'config/database.example.yml')
 rake 'db:migrate'
 
 git :init
@@ -184,7 +186,6 @@ if yes? 'Need clearance, Clarence?'
     end
   end
 
-  FileUtils.cp('config/database.yml', 'config/database.example.yml')
   rake 'db:migrate'
 
   git :add => '.'
