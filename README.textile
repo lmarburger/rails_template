@@ -5,7 +5,7 @@ Forked from Dan Pickett's Enlightened Template
 h2. Use this template
 
 <code>
-  rails my_awesome_project -m rails blah -m http://github.com/lmarburger/rails_template/raw/master/template.rb
+  rails my_awesome_project -m http://github.com/lmarburger/rails_template/raw/master/template.rb
 </code>
 
 
