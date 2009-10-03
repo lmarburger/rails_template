@@ -1,4 +1,6 @@
-h1. Enlightened Template (Rails Template from Enlight Solutions)
+h1. Larry's Brilliant Rails Tempalte
+
+Forked from Dan Pickett's Enlightened Template
 
 *# clone this repo
   <code>
@@ -9,51 +11,32 @@ h1. Enlightened Template (Rails Template from Enlight Solutions)
     rails <app_name> -m <path_to_repo>/template.rb
   </code>
   
+
 h2. Gems
 
-* Authologic
 * Inherited Resources
 * Formtastic
 * Searchlogic
 * Paperclip
+* Compass
 * Hoptoad Notifier
-* metric_fu
-* inaction_mailer for dev
 
-h2. Plugins
-
-* tab_menu
-* limerick_rake
-* superdeploy
-* codeofficer's silky_buttons generator
 
 h2. Testing
 
-* Rspec
-* Shoulda
-* factory_girl
 * cucumber
 * webrat
-* jferris's mocha fork (spies)
-* metric_fu
-* pending
+* shoulda
+* factory_girl
+* faker
+* rr
+
 
 h2. Initializers
 
-* action_mailer setup
 * hoptoad setup
-* validation_fix - make fieldWithErrors element a &lt;span&gt;
-* hoptoad - setup hoptoad
-* debugging stuff
 
-h2. CSS
-
-* Eric Meyer's Reset
-* 960.gs
-* conditional IE6/IE7 stylesheets
 
 h2. JavaScript
 
 * JQuery (google hosted)
-* JQuery UI (google hosted)
-* under_construction
