@@ -3,6 +3,7 @@ h1. Larry's Brilliant Rails Tempalte
 Forked from Dan Pickett's Enlightened Template
 
 h2. Use this template
+
 <code>
   rails my_awesome_project -m rails blah -m http://github.com/lmarburger/rails_template/raw/master/template.rb
 </code>
