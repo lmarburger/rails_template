@@ -165,26 +165,29 @@ git :init
 git :add => '.'
 git :commit => '-a -m "Initial commit"'
 
+if yes? 'Need clearance, Clarence?'
 
-# ====================
-# Clearance
-# ====================
+  # ====================
+  # Clearance
+  # ====================
 
-generate :clearance
-generate :clearance_features, '--force'
+  generate :clearance
+  generate :clearance_features, '--force'
 
-# Add consts clearance needs to the environment
-File.open 'config/environments/cucumber.rb', 'a' do |file|
-  [ "\n\n",
-    "HOST = 'localhost'",
-    "DO_NOT_REPLY = 'donotreply@example.com'"
-  ].each do |line|
-    file.puts line
+  # Add consts clearance needs to the environment
+  File.open 'config/environments/cucumber.rb', 'a' do |file|
+    [ "\n\n",
+      "HOST = 'localhost'",
+      "DO_NOT_REPLY = 'donotreply@example.com'"
+    ].each do |line|
+      file.puts line
+    end
   end
+
+  FileUtils.cp('config/database.yml', 'config/database.example.yml')
+  rake 'db:migrate'
+
+  git :add => '.'
+  git :commit => '-a -m "Added Clearance"'
+
 end
-
-FileUtils.cp('config/database.yml', 'config/database.example.yml')
-rake 'db:migrate'
-
-git :add => '.'
-git :commit => '-a -m "Added Clearance"'
