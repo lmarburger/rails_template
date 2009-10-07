@@ -7,7 +7,6 @@
 # ====================
 
 gem 'thoughtbot-hoptoad_notifier', :lib => "hoptoad_notifier"
-gem 'thoughtbot-clearance', :lib => 'clearance', :source => 'http://gems.github.com'
 gem 'josevalim-inherited_resources', :lib => 'inherited_resources', :source => 'http://gems.github.com'
 gem 'justinfrench-formtastic', :lib => 'formtastic', :source => 'http://gems.github.com'
 gem 'thoughtbot-paperclip', :lib => 'paperclip'
@@ -176,6 +175,7 @@ if yes? 'Need clearance, Clarence?'
   # Clearance
   # ====================
 
+  gem 'thoughtbot-clearance', :lib => 'clearance', :source => 'http://gems.github.com'
   generate :clearance
   generate :clearance_features, '--force'
 
