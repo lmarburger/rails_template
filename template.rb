@@ -195,3 +195,15 @@ if yes? 'Need clearance, Clarence?'
   git :commit => '-a -m "Added Clearance"'
 
 end
+
+
+# ====================
+# Capistrano
+# ====================
+
+if yes? 'Capify?'
+  capify!
+
+  git :add => '.'
+  git :commit => '-a -m "Capified!"'
+end
