@@ -152,7 +152,6 @@ TAGS
 END
 
 # Create an empty schema
-FileUtils.cp('config/database.yml', 'config/database.example.yml')
 rake 'db:migrate'
 
 git :init
