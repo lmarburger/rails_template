@@ -168,11 +168,12 @@ run 'haml --rails .'
 git :add => '.'
 git :commit => '-a -m "Using Haml"'
 
-if yes? 'Need clearance, Clarence?'
 
-  # ====================
-  # Clearance
-  # ====================
+# ====================
+# Clearance
+# ====================
+
+if yes? 'Need clearance, Clarence?'
 
   gem 'thoughtbot-clearance', :lib => 'clearance', :source => 'http://gems.github.com'
   generate :clearance
