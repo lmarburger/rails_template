@@ -2,31 +2,85 @@
 # based on Suspenders by Thoughtbot
 # influenced by Mike Gunderloy's rails template - http://gist.github.com/145676
 
-# ====================
-# Gems
-# ====================
+# Using bundler: http://github.com/tomafro/dotfiles/blob/master/resources/rails/bundler.rb
+inside 'vendor/bundler_gems/gems/bundler' do
+  run 'git init'
+  run 'git pull --depth 1 git://github.com/wycats/bundler.git'
+  run 'rm -rf .git .gitignore'
+end
 
-gem 'thoughtbot-hoptoad_notifier', :lib => "hoptoad_notifier"
-gem 'josevalim-inherited_resources', :lib => 'inherited_resources', :source => 'http://gems.github.com'
-gem 'justinfrench-formtastic', :lib => 'formtastic', :source => 'http://gems.github.com'
-gem 'thoughtbot-paperclip', :lib => 'paperclip'
-gem 'compass'
+file 'script/bundle', %{
+#!/usr/bin/env ruby
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), '..', 'vendor', 'bundler_gems', 'gems', 'bundler', 'lib'))
+require 'rubygems'
+require 'rubygems/command'
+require 'bundler'
+require 'bundler/commands/bundle_command'
+Gem::Commands::BundleCommand.new.invoke(*ARGV)
+}.strip
 
-# Generate cucumber before adding test gems
-generate :cucumber
+run 'chmod +x script/bundle'
 
-# Cucumber gems
-gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :env => 'cucumber'
-gem 'faker', :env => 'cucumber'
+file 'Gemfile', %{
+disable_system_gems
 
-# Test gems
-gem 'thoughtbot-shoulda', :lib => 'shoulda', :env => 'test'
-gem 'thoughtbot-factory_girl', :lib => 'factory_girl', :env => 'test'
-gem 'jnunemaker-matchy', :lib => 'matchy', :env => 'test'
-gem 'rr', :env => 'test'
-gem 'faker', :env => 'test'
+# Not using the standard vendor/gems path to avoid a flood of "Unpacked gem
+# cache in vendor/gems has no specification file" errors.
+bundle_path 'vendor/bundler_gems'
 
-rake 'gems:install', :sudo => true if yes? "Install gems as sudo?"
+clear_sources
+source 'http://gemcutter.org'
+source 'http://gems.github.com'
+
+gem 'rails', '#{ Rails::VERSION::STRING }'
+gem 'haml'
+gem 'authlogic'
+gem 'inherited_resources'
+gem 'formtastic'
+
+only :development do
+  gem 'sqlite3-ruby'
+end
+
+only :test, :cucumber do
+  gem 'factory_girl'
+  gem 'faker'
+end
+
+only :test do
+  gem 'shoulda'
+  gem 'jnunemaker-matchy', :require_as => 'matchy'
+end
+
+only :cucumber do
+  gem 'cucumber'
+  gem 'webrat'
+  gem 'rspec'
+  gem 'rspec-rails'
+  gem 'rr'
+end
+}.strip
+
+run 'script/bundle'
+
+append_file '/config/preinitializer.rb', %{
+require File.expand_path File.join(File.dirname(__FILE__), '..', 'vendor', 'bundler_gems', 'environment')
+}
+
+gsub_file 'config/environment.rb', "require File.join(File.dirname(__FILE__), 'boot')", %{
+require File.join(File.dirname(__FILE__), 'boot')
+
+# Hijack rails initializer to load the bundler gem environment before loading the rails environment.
+
+Rails::Initializer.module_eval do
+  alias load_environment_without_bundler load_environment
+
+  def load_environment
+    Bundler.require_env configuration.environment
+    load_environment_without_bundler
+  end
+end
+}
 
 
 # ====================
@@ -63,7 +117,6 @@ file 'app/controllers/application_controller.rb', <<-CODE
 class ApplicationController < ActionController::Base
   helper :all
   protect_from_forgery
-  include HoptoadNotifier::Catcher
 end
 CODE
 
@@ -83,7 +136,7 @@ CODE
 route "map.root :controller => 'home'"
 
 # Create a blank home view
-file 'app/views/home/index.erb', ''
+file 'app/views/home/index.html.haml', '%h1 Welcome to the Internet!'
 
 
 # ====================
@@ -106,30 +159,36 @@ file 'app/views/layouts/_flashes.html.erb', <<-CODE
 </div>
 CODE
 
-file 'app/views/layouts/application.html.erb', <<-CODE
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <title></title>
-    
-    <%= stylesheet_link_tag 'main' %>
-  </head>
-  <body class="<%= body_class %>">
-    <%= render :partial => 'layouts/flashes' -%>
-    <%= yield %>
-  </body>
-</html>
+file 'app/views/layouts/application.html.haml', <<-CODE
+!!!
+%html(xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en")
+  %head
+    %meta(http-equiv="Content-type" content="text/html; charset=utf-8")
+    %title= yield :title
+
+    = stylesheet_link_tag 'main'
+
+  %body(class=body_class)
+    = render :partial => 'layouts/flashes'
+    = yield
 CODE
 
 
-#====================
-# Initializers
-#====================
+# ====================
+# Tests
+# ====================
 
-initializer 'hoptoad.rb', <<-CODE
-HoptoadNotifier.configure do |config|
-  config.api_key = 'HOPTOAD-KEY'
+file 'test/test_helper.rb', <<-CODE
+ENV["RAILS_ENV"] = "test"
+require File.expand_path(File.dirname(__FILE__) + "/../config/environment")
+require 'test_help'
+
+# Use Authlogic's test helpers
+require 'authlogic/test_case'
+
+require 'rr'
+class ActiveSupport::TestCase
+  include RR::Adapters::TestUnit
 end
 CODE
 
@@ -149,6 +208,9 @@ index/*
 scratch_directory
 TAGS
 *.swp
+*.swo
+bin/*
+vendor/bundler_gems/*
 END
 
 # Create an empty schema
@@ -170,40 +232,10 @@ git :commit => '-a -m "Using Haml"'
 
 
 # ====================
-# Clearance
-# ====================
-
-if yes? 'Need clearance, Clarence?'
-
-  gem 'thoughtbot-clearance', :lib => 'clearance', :source => 'http://gems.github.com'
-  generate :clearance
-  generate :clearance_features, '--force'
-
-  # Add consts clearance needs to the environment
-  File.open 'config/environments/cucumber.rb', 'a' do |file|
-    [ "\n\n",
-      "HOST = 'localhost'",
-      "DO_NOT_REPLY = 'donotreply@example.com'"
-    ].each do |line|
-      file.puts line
-    end
-  end
-
-  rake 'db:migrate'
-
-  git :add => '.'
-  git :commit => '-a -m "Added Clearance"'
-
-end
-
-
-# ====================
 # Capistrano
 # ====================
 
-if yes? 'Capify?'
-  capify!
+capify!
 
-  git :add => '.'
-  git :commit => '-a -m "Capified!"'
-end
+git :add => '.'
+git :commit => '-a -m "Capified!"'
