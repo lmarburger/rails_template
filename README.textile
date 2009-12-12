@@ -1,38 +1,10 @@
 h1. Larry's Brilliant Rails Tempalte
 
-Forked from Dan Pickett's Enlightened Template
+Forked from Dan Pickett's Enlightened Template and merged Tom Ward's bundler
+template.
 
-h2. Use this template
+h2. To use this template
 
 <code>
   rails my_awesome_project -m http://github.com/lmarburger/rails_template/raw/master/template.rb
 </code>
-
-
-h2. Gems
-
-* Inherited Resources
-* Formtastic
-* Paperclip
-* Compass
-* Hoptoad Notifier
-
-
-h2. Testing
-
-* cucumber
-* webrat
-* shoulda
-* factory_girl
-* faker
-* rr
-
-
-h2. Initializers
-
-* hoptoad setup
-
-
-h2. JavaScript
-
-* JQuery (google hosted)
